@@ -1,4 +1,4 @@
-name: pytorch-stardist_test3
+name: pytorch-stardist
 channels:
   - defaults
   - pytorch
