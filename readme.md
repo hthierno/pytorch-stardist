@@ -21,7 +21,7 @@ Follow this step to install pytorch stardist:
     `conda env create --file environment.yml`
 3. Activate the environment and install the package `stardist_tools`:
     ```
-    conda activate pytorch_stardist
+    conda activate pytorch-stardist
     cd stardist_tools_
     python setup.py install
     ```
