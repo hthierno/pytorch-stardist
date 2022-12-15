@@ -1,4 +1,3 @@
-import functools
 import itertools
 from copy import deepcopy
 
@@ -121,7 +120,7 @@ def define_stardist_net(opt):
     gpu_ids = [0] if opt.use_gpu else []
     net.init_net( init_type=opt.init_type, init_gain=opt.init_gain, gpu_ids=gpu_ids )
     net.print_network()
-    net.hparams = hparams
+    #net.hparams = hparams
 
     return net
         
@@ -241,7 +240,7 @@ class Resnet(nn.Module):
 
         super(Resnet, self).__init__()
 
-        assert (np.asarray(n_downs) <= n_blocks).all(), f" n_downs > n_blocks. The number of resnet blocks (n_blocks={n_blocks}) does not allow to perform n_downs={n_downs} downsampling. Set n_downs<=n_blocks."
+        assert (np.log2(n_downs) <= n_blocks).all(), f" n_downs > n_blocks. The number of resnet blocks (n_blocks={n_blocks}) does not allow to perform n_downs={n_downs} downsampling. Set n_downs<=n_blocks."
         
         n_dim = len(kernel_size)
         assert n_dim in (2, 3), f'Resnet only 2d or 3d (kernel_size={kernel_size})'

@@ -1,0 +1,95 @@
+# See <Config2D: class> at src.config.py for a description of the parameters
+
+name                           : 'dsb2018'
+random_seed                    : 42
+
+
+log_dir                        :  './logs/'
+checkpoints_dir                :  './checkpoints'
+result_dir                     :  './results'
+
+# ========================= dataset ==================================
+
+data_dir                       : './datasets/dsb2018'
+val_size                       : 0.15
+n_rays                         : 32
+foreground_prob                : 0.9
+n_classes                      : null # non null value (multiclass) not supported yet
+patch_size                     : [256, 256]
+cache_sample_ind               : True
+cache_data                     : True
+
+batch_size                     : 4
+num_workers                    : 0
+
+preprocess                     : 'flip_randintensity'
+preprocess_val                 : 'none'
+intensity_factor_range         : [0.6, 2.]
+intensity_bias_range           : [-0.2, 0.2]
+scale_limit                    : [1., 1.1]
+resize_to                      : [286, 286]
+crop_size                      : [256, 256]
+
+#======================================================================
+
+
+# ========================= Training ==================================
+
+use_gpu                        : True
+use_amp                        : True
+isTrain                        : True 
+evaluate                       : True
+
+
+load_epoch                     : null
+n_epochs                       : 2 #400
+n_steps_per_epoch              : 10 #100
+
+
+lambda_prob                    : 1.
+lambda_dist                    : 0.2
+lambda_reg                     : 0.0001
+lambda_prob_class              : 1.
+
+save_epoch_freq                : 50
+start_saving_best_after_epoch  : 1 #10
+
+
+#======================================================================
+
+
+
+# ========================= Networks configurations ==================
+init_type                      : 'normal'
+init_gain                      : 0.02
+
+backbone                       : 'resnet'
+grid                           : 'auto'
+anisotropy                     : 'auto'
+
+n_channel_in                   : 1
+kernel_size                    : [3, 3]
+resnet_n_blocks                : 4
+resnet_n_downs                 : null  # should be equal to `grid`. if `grid`='auto', will be set to the calculate 'grid' in the code
+n_filter_of_conv_after_resnet  : 128
+resnet_n_filter_base           : 32
+resnet_n_conv_per_block        : 3
+use_batch_norm                 : False
+
+#======================================================================
+
+
+# ========================= Optimizers ================================
+lr                             : 0.0003
+beta1                          :  0.9
+beta2                          :  0.999
+
+lr_policy                      : 'plateau'
+lr_plateau_factor              : 0.5
+lr_plateau_threshold           : 0.0000001
+lr_plateau_patience            : 40
+min_lr                         : 0.000001
+
+lr_linear_n_epochs             : 100
+lr_decay_iters                 : 100
+T_max                          : 2

@@ -1,5 +1,5 @@
 # PyTorch StarDist
-This repository contains PyTorch implementations for both StarDist 2D and StarDist 3D as describe in:
+This repository contains PyTorch implementations for both StarDist 2D and StarDist 3D as described in:
 
 - Uwe Schmidt, Martin Weigert, Coleman Broaddus, and Gene Myers.  
 [*Cell Detection with Star-convex Polygons*](https://arxiv.org/abs/1806.03535).  
@@ -27,11 +27,41 @@ Follow this step to install pytorch stardist:
     ```
 
 ## Training and Inference
-the notebooks at `examples/3D` and `examples/2D` show in details how to perform training and inference.
+### Notebooks
+The notebooks at `examples/3D` and `examples/2D` show in details how to perform training and inference.
+
+### Command line scipts
+You can also use command line script.
+
+Let's download some data for the demonstration:
+
+```
+python download_demo_data.py
+```
+
+#### Training
+You need a YAML file containing the training configurations to run the `train.py` script . Check `confs\dsb2018_2d.yml` and `confs\demo_3d.yml` for examples of configuration files.
+
+Run the following command to train the model with the configurations in `confs\dsb2018.yml`: 
+
+```
+python train.py --yaml_conf .\confs\dsb2018.yml
+```
+
+It will train a starDist2D model on a subsample of the Data Science Bowl 2018 dataset. 
+
+#### Inference
+We can perform predictions with the trained model using:
+```
+python predict.py --name dsb2018 --checkpoints_dir .\checkpoints --image_dir .\datasets\dsb2018\test\images --result_dir .\datasets\dsb2018\preds --use_gpu --use_amp
+```
+
+`--name dsb2018` indicates the name of the experiment given in the YAML configuration file used for the training.
+
+<p align="center">
+  <img src="http://https://github.com/hthierno/pytorch-stardist/images/example_preds.png", alt="example_of_prediction" />
+</p>
 
 ## Notes
-* This implementation doesn't support yet:
-    - Multi-class classification of nuclei
-    - Per patch inference on 2D images (Per patch inference on 3D images is implemented).
 * The code is inspired by [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) and [stardist](https://github.com/stardist/stardist)
 * The code in the folder `stardist_tools_` is from the [StarDist](https://github.com/stardist/stardist) repo.

@@ -3,7 +3,6 @@ import warnings
 
 from pathlib import Path
 from copy import deepcopy
-
 import warnings
 
 import numpy as np
@@ -27,6 +26,7 @@ from .config import Config2D, Config3D
         
 
 class StarDistBase(nn.Module):
+    
     def __init__(self, opt, rays=None):
         super().__init__()
         
@@ -48,19 +48,24 @@ class StarDistBase(nn.Module):
         self.use_amp = opt.use_amp if hasattr(opt, "use_amp") else False
         
         if self.use_amp and not opt.use_gpu:
-            warnings.warn("GPU is not used (use_gpu=False), so use_amp is set to False")
+            warnings.warn("GPU is not used (use_gpu=False), so `use_amp` is set to False")
             self.use_amp = False
 
         self.device = torch.device(f"cuda:0") if opt.use_gpu else torch.device("cpu")
         self.logger=Logger()
 
         # Define and load networks
-        if hasattr(opt, "load_epoch") and opt.load_epoch is not None:
+        if hasattr(opt, "load_epoch") and opt.load_epoch not in (None, ""):
             self.opt.epoch_count = opt.load_epoch
             name = None
             if opt.load_epoch=="best":
                 name="best"
-            self.load_state(name=name)
+            
+            load_path=None
+            if hasattr(self.opt, "load_path"):
+                load_path = opt.load_path
+            self.load_state(name=name, load_path=load_path)
+
             self.opt.n_dim = len(self.opt.kernel_size)
 
         else:
@@ -303,6 +308,8 @@ class StarDistBase(nn.Module):
             default: None -> Use the model receptive field
         """
 
+        self.net.eval()
+
         if patch_size is not None:
             patch_size, context = self._prepare_patchsize_context(patch_size, context)
 
@@ -399,22 +406,18 @@ class StarDistBase(nn.Module):
         epoch = self.opt.epoch_count
         
         state = {
-            "hparams": deepcopy( self.net.hparams ),
+            "opt": vars(self.opt),
+            "epoch": epoch,
+
             "model_state_dict": self.net.cpu().state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
             "scheduler_state_dict": self.lr_scheduler.state_dict(),
             "amp_scaler_state_dict": self.amp_scaler.state_dict(),
-
-            "training_info": {
-                "epoch": epoch,
-                "opt": vars(self.opt), #.x if isinstance(self.opt, dotdict) else self.opt
-                #"thresholds": self.thresholds
-            }
         }
 
 
         if name is None:
-            name = f"epoch{epoch}_net"
+            name = f"epoch{epoch}_ckpt"
         torch.save( state, save_path / f"{name}.pth" )
 
 
@@ -423,6 +426,12 @@ class StarDistBase(nn.Module):
         log_dir = Path(self.opt.log_dir) / f"{self.opt.name}"
         self.logger.to_pickle( path= log_dir / "metrics_logs.pkl" )
         self.logger.to_csv( path= log_dir / "metrics_logs.csv" )
+        
+        save_json(log_dir /'last_configuration.json', self.thresholds)
+
+        # with open(log_dir /'last_configuration.yml', 'w') as f:
+        #     yaml.dump( vars(self.opt), stream=f )
+
 
         print(f"Logger saved at <{log_dir}>")
 
@@ -430,56 +439,47 @@ class StarDistBase(nn.Module):
 
 
 
-    def load_state(self, name=None):
+
+    def load_state(self, name=None, load_path=None):
         opt = self.opt
         
-        if hasattr(opt, "load_path") and opt.load_path is not None:
-            raise NotImplementedError("load_path argument is not supported now. you have to set load_epoch and checkpoint_dir")
-        else:
-            load_path = Path(opt.checkpoints_dir) / f"{opt.name}"
+        if load_path is None:
+            if name is None:
+                name = f"epoch{opt.epoch_count}_ckpt"
 
-
-        if name is None:
-            name = f"epoch{opt.epoch_count}_net"
-        
-        load_path =  load_path / f"{name}.pth"
+            load_dir = Path(opt.checkpoints_dir) / f"{opt.name}"        
+            load_path =  load_dir / f"{name}.pth"
         
         print('Load path:', load_path, self.device)
         state = torch.load(load_path, map_location=str(self.device) )
 
-        # print('Load path:', load_path / f"epoch{opt.load_epoch}_net.pth", self.device)
-        # state = torch.load(load_path / f"epoch{opt.load_epoch}_net.pth" , map_location=str(self.device) )
-
-
-        ### MODIFIED HERE !!!!
-        old_opt = state['training_info']["opt"] #dotdict( stateG['training_info']["opt"] )
-        config_class = Config3D if old_opt['n_dim']==3 else Config2D
-        # if len(old_opt["kernel_size"]) == 2:
-        #     raise "2D network not supported yet."
-        old_opt = config_class(allow_new_params=True, **old_opt)
-        old_opt.epoch_count = state['training_info']['epoch']
-        old_opt.name = opt.name
+        loaded_opt = state["opt"]
+        config_class = Config3D if loaded_opt['n_dim']==3 else Config2D
+        
+        loaded_opt = config_class(allow_new_params=True, **loaded_opt)
+        loaded_opt.epoch_count = state['epoch']
+        loaded_opt.name = opt.name
+        loaded_opt.use_gpu = opt.use_gpu
+        loaded_opt.use_amp = opt.use_amp
+        loaded_opt.checkpoints_dir = opt.checkpoints_dir
+        loaded_opt.log_dir = opt.log_dir
         
 
         
-        #opt.load_epoch = old_opt.epoch_count
-        if opt.n_epochs > old_opt.n_epochs:
-            old_opt.n_epochs = opt.n_epochs
-        self.opt = old_opt
+        if opt.n_epochs > loaded_opt.n_epochs:
+            loaded_opt.n_epochs = opt.n_epochs
+        self.opt = loaded_opt
 
         if self.opt.n_dim==3:
             if self.opt.rays_json['kwargs']["anisotropy"] is None:
                 warnings.warn("Anisotropy is not in the checkpoint. Assuming isotropy; This may reduce performances if it is not the case.")
 
-        # print(old_opt.cur_num_downsG)
-        # print(id(old_opt)==id(opt))
-        #print(old_opt.cur_num_downsG)
-        #old_opt = opt
         
         ################################
 
         ### Loading thresholds
-        thresholds_path = Path(self.opt.log_dir) / f"{self.opt.name}/thresholds.json"
+        checkpoint_dir = Path( self.opt.checkpoints_dir ) / f"{self.opt.name}"
+        thresholds_path = checkpoint_dir / "thresholds.json"
         if thresholds_path.exists():
             print("Loading threholds ...")
             self.thresholds = load_json(thresholds_path)
@@ -487,7 +487,7 @@ class StarDistBase(nn.Module):
             warnings.warn(f"Didn't find thresholds in checkpoint at <{thresholds_path}>. Using Default Thresholds: {self.thresholds}")
         
         print("Instanciating network")
-        self.net = define_stardist_net( old_opt )
+        self.net = define_stardist_net( loaded_opt )
         print( self.net.load_state_dict( state['model_state_dict'] ) )
 
         
@@ -536,6 +536,7 @@ class StarDistBase(nn.Module):
         optimize_kwargs=None,
         #save_to_json=True
     ):
+        # Modified from https://github.com/stardist/stardist/blob/master/stardist/models/base.py
         """Optimize two thresholds (probability, NMS overlap) necessary for predicting object instances.
         Note that the default thresholds yield good results in many cases, but optimizing
         the thresholds for a particular dataset can further improve performance.
@@ -612,8 +613,9 @@ class StarDistBase(nn.Module):
         print(end='', file=sys.stderr, flush=True)
         print("Using optimized values: prob_thresh={prob:g}, nms_thresh={nms:g}.".format(prob=self.thresholds["prob"], nms=self.thresholds["nms"]))
         
-        log_dir = Path(self.opt.log_dir) / f"{self.opt.name}"
-        dest_path = log_dir / "thresholds.json"
+        # log_dir = Path(self.opt.log_dir) / f"{self.opt.name}"
+        checkpoint_dir = Path( self.opt.checkpoints_dir ) / f"{self.opt.name}"
+        dest_path = checkpoint_dir / "thresholds.json"
         makedirs(dest_path)
         print(f"Saving to <{dest_path}>")
         save_json(dest_path, self.thresholds)

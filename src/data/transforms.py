@@ -142,18 +142,29 @@ def resize_volume(volume, target_size, method="trilinear"):
     if method != "nearest":
         align_corners = True
     
+    if len(target_size)==2:
+        if volume.ndim > 2:
+            target_size = (volume.shape[-3],) + tuple(target_size)
+        else:
+            target_size = (1,) + tuple(target_size)
 
     volume = torch.from_numpy( volume )#.unsqueeze(0).unsqueeze(0)
+
+    ndim = volume.ndim
     
-    for _ in range( 5 - volume.ndim ):
+    for _ in range( 5 - ndim ):
         volume = volume.unsqueeze(0)
 
     res_volume = F.interpolate( volume, size=target_size, align_corners=align_corners, mode=method )
     
     #return res_volume.numpy()[0,0]
 
-    for _ in range( 5 - volume.ndim ):
-        volume = volume[0]
+    for _ in range( 5 - ndim ):
+        # Modified Here
+        # This volume = volume[0]
+        # By
+        res_volume = res_volume[0]
+        # ========================
 
     return res_volume.numpy()
 

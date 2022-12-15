@@ -1,16 +1,12 @@
-
 import os
 import random
-from copy import deepcopy
 from pathlib import Path
-
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 import torch
-
 
 from stardist_tools import calculate_extents, Rays_GoldenSpiral, random_label_cmap
 from src.data.stardist_dataset import get_train_val_dataloaders
@@ -80,6 +76,20 @@ def prepare_conf(opt:ConfigBase):
     """
 
     opt.n_channel = opt.n_channel_in
+    opt.is_3d = len(opt.kernel_size)==3
+
+    if not opt.is_3d:
+
+        # Converting some 2d params to equivalent 3d params. example: crop_size = [256,256] -> [1, 256, 256]
+        for attr in ('crop_size', 'resize_to'):
+            if not hasattr(opt, attr):
+                warnings.warn(f"attribue <{attr}> is not in configurations")
+                continue
+
+            value = opt.__getattribute__(attr)
+            value = [1] + value
+            opt.__setattr__(attr, value)
+
 
     if not hasattr(opt, "use_opencl") :
         opt.use_opencl = opt.use_gpu
@@ -102,7 +112,7 @@ def prepare_conf(opt:ConfigBase):
 
 
     extents = calculate_extents(masks)
-    opt.extents = extents
+    opt.extents = list(extents)
 
 
     if anisotropy == "auto":
@@ -115,6 +125,7 @@ def prepare_conf(opt:ConfigBase):
     grid = opt.grid
     if grid == "auto":
         grid = tuple( np.round( max(anisotropy) / a ).astype(int) for a in anisotropy )  #tuple(1 if a > 1.5 else 2 for a in anisotropy)
+        grid = tuple(make_power_of_2(grid))
         if max(grid)==1:
             grid = (2,) * len(grid)
         print(" === 'grid' set to", grid)
@@ -126,7 +137,8 @@ def prepare_conf(opt:ConfigBase):
 
     return opt
 
-
+def make_power_of_2(arr):
+    return 2 ** np.ceil( np.log2(arr) ).astype(int)
 
 
 lbl_cmap = random_label_cmap()

@@ -17,12 +17,12 @@ from stardist_tools.sample_patches import get_valid_inds, sample_patches
 from stardist_tools.utils import edt_prob, mask_to_categorical
 from stardist_tools.geometry import star_dist3D, star_dist
 
-from .utils import load_tif, TimeTracker, seed_worker
+from .utils import load_img, TimeTracker, seed_worker, get_files
 from .transforms import get_params, get_transforms
 
 
 
-def get_dataloader(opt, image_paths, mask_paths, rays=None, is_train_loader=True):
+def get_dataloader(opt, image_paths, mask_paths, rays=None, is_train_loader=True, augmenter=None):
 
     if len(opt.kernel_size)==3:
         assert rays is not None
@@ -31,11 +31,13 @@ def get_dataloader(opt, image_paths, mask_paths, rays=None, is_train_loader=True
             opt=opt,
             image_paths=image_paths, mask_paths=mask_paths,
             rays=rays,
+            augmenter=augmenter,
         )
     else:
         dataset = StarDistData2D(
             opt=opt,
-            image_paths=image_paths, mask_paths=mask_paths
+            image_paths=image_paths, mask_paths=mask_paths,
+            augmenter=augmenter,
         )
 
 
@@ -68,7 +70,7 @@ def train_val_split(image_paths, mask_paths, val_size=0.15, random_seed=42):
     return image_paths_train, mask_paths_train, image_paths_val, mask_paths_val 
     
 
-def get_train_val_dataloaders(opt, rays=None):
+def get_train_val_dataloaders(opt, rays=None, train_augmenter=None):
     """
         The folder at `opt.data_dir` should contain at least the `train` folder.
         If it doesn't contains the `val` folder, data from the `train` folder will be splitted to create the validation set
@@ -83,8 +85,8 @@ def get_train_val_dataloaders(opt, rays=None):
         assert data_dir_images.exists(), data_dir_images
         assert data_dir_masks.exists(), data_dir_masks
 
-        image_paths = list( data_dir_images.glob("*.tif") )
-        mask_paths = list( data_dir_masks.glob("*.tif") )
+        image_paths = get_files(data_dir_images)
+        mask_paths = get_files(data_dir_masks)
 
         assert len(image_paths) > 0, ( len( image_paths ), data_dir_images )
         assert len(mask_paths) > 0, ( len( mask_paths ), data_dir_masks )
@@ -115,7 +117,7 @@ def get_train_val_dataloaders(opt, rays=None):
             setattr(val_opt, attr.replace("_val", ""), getattr(val_opt, attr) )
 
 
-    train_dataloader = get_dataloader(opt, image_paths_train, mask_paths_train, rays, is_train_loader=True)
+    train_dataloader = get_dataloader(opt, image_paths_train, mask_paths_train, rays, is_train_loader=True, augmenter=train_augmenter)
     val_dataloader = get_dataloader(val_opt, image_paths_val, mask_paths_val, rays, is_train_loader=False)
 
 
@@ -233,7 +235,7 @@ class StarDistDataBase(Dataset):
                 N.B: in self.__get_item__, data augmentation is done on the patch and not directly on the whole image.
         """
 
-        assert normalize_channel in ("independently", "jointly", "none"), normalize
+        assert normalize_channel in ("independently", "jointly", "none"), normalize_channel
         
         image_path = self.image_paths[idx]
         mask_path = self.mask_paths[idx]
@@ -242,8 +244,8 @@ class StarDistDataBase(Dataset):
             image = self._data_cache[idx]["image"]
             mask = self._data_cache[idx]["mask"]
         else:
-            image = load_tif(image_path).squeeze()
-            mask = load_tif(mask_path).squeeze()
+            image = load_img(image_path).squeeze().astype("float32")
+            mask = load_img(mask_path).squeeze()
             
             mask_int = mask.astype(np.uint16)
             if (mask_int!=mask).any():
@@ -429,13 +431,6 @@ class StarDistDataBase(Dataset):
         prob_class = None
         if self.opt.n_classes is not None:
             raise NotImplementedError('Multiclass support not implemented yet')
-            prob_class = mask_to_categorical(mask, self.opt.n_classes, self.classes[idx])
-            # shape = mask.shape + (n_classes+1, )
-            prob_class = np.moveaxis(prob_class, -1, 0)
-            # shape = (n_classes+1, ) + mask.shape
-
-            prob_class = zoom(prob_class, (1,)+tuple(1/g for g in self.grid), order=0)
-            prob_class = prob_class[np.newaixs]
         
         item = dict()
         item['image_path'] = image_path.stem if isinstance(image_path, Path) else image_path
