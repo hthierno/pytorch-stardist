@@ -62,9 +62,6 @@ python predict.py --name dsb2018 --checkpoints_dir .\checkpoints --image_dir .\d
   <img src="https://github.com/hthierno/pytorch-stardist/blob/main/images/example_preds.png", alt="example_of_prediction" />
 </p>
 
-## Results
-
-
 ## Notes
 * The code is inspired by [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) and [stardist](https://github.com/stardist/stardist)
 * The code in the folder `stardist_tools_` is from the [StarDist](https://github.com/stardist/stardist) repo.
