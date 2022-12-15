@@ -59,8 +59,11 @@ python predict.py --name dsb2018 --checkpoints_dir .\checkpoints --image_dir .\d
 `--name dsb2018` indicates the name of the experiment given in the YAML configuration file used for the training.
 
 <p align="center">
-  <img src="http://https://github.com/hthierno/pytorch-stardist/images/example_preds.png", alt="example_of_prediction" />
+  <img src="https://github.com/hthierno/pytorch-stardist/blob/main/images/example_preds.png", alt="example_of_prediction" />
 </p>
+
+## Results
+
 
 ## Notes
 * The code is inspired by [pytorch-CycleGAN-and-pix2pix](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) and [stardist](https://github.com/stardist/stardist)
