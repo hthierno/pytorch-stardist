@@ -1,0 +1,179 @@
+Sending build context to Docker daemon  8.209MB
+Step 1/17 : FROM ubuntu:22.04
+ ---> 216c552ea5ba
+Step 2/17 : RUN apt-get update &&     apt-get install -y build-essential  &&     apt-get install -y wget &&     apt-get clean &&     rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> e4e41adfb0af
+Step 3/17 : ENV CONDA_DIR /opt/conda
+ ---> Using cache
+ ---> 4c612718c048
+Step 4/17 : RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh &&  /bin/bash ~/miniconda.sh -b -p /opt/conda
+ ---> Using cache
+ ---> 5de6e3b7bfd7
+Step 5/17 : ENV PATH=$CONDA_DIR/bin:$PATH
+ ---> Using cache
+ ---> c18817488de5
+Step 6/17 : RUN conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+ ---> Using cache
+ ---> ea878ce8e3c2
+Step 7/17 : ADD environment.yml /tmp/environment.yml
+ ---> Using cache
+ ---> 612cd85eeede
+Step 8/17 : WORKDIR /tmp
+ ---> Using cache
+ ---> f5d1cbf9e852
+Step 9/17 : RUN conda env create -f environment.yml
+ ---> Using cache
+ ---> 81440dfbd4cb
+Step 10/17 : ADD . /workspace
+ ---> 1b313f393f06
+Step 11/17 : WORKDIR /workspace
+ ---> Running in 16e6b61683c6
+Removing intermediate container 16e6b61683c6
+ ---> a7defb641eeb
+Step 12/17 : RUN echo "conda activate pytorch-stardist" >> ~/.bashrc
+ ---> Running in 3013e655d92a
+Removing intermediate container 3013e655d92a
+ ---> ace38ce57693
+Step 13/17 : SHELL ["/bin/bash", "--login", "-c"]
+ ---> Running in ee11d40f969f
+Removing intermediate container ee11d40f969f
+ ---> 6223b03bc0ba
+Step 14/17 : WORKDIR /workspace/stardist_tools_
+ ---> Running in b295dac5f2fe
+Removing intermediate container b295dac5f2fe
+ ---> f83772336fce
+Step 15/17 : RUN python setup.py build_ext --help-compiler
+ ---> Running in 125c5fb08061
+[91m/workspace/stardist_tools_/setup.py:4: DeprecationWarning: 
+
+  `numpy.distutils` is deprecated since NumPy 1.23.0, as a result
+  of the deprecation of `distutils` itself. It will be removed for
+  Python >= 3.12. For older Python versions it will remain present.
+  It is recommended to use `setuptools < 60.0` for those Python versions.
+  For more details, see:
+    https://numpy.org/devdocs/reference/distutils_status_migration.html 
+
+
+  from numpy.distutils.misc_util import get_numpy_include_dirs
+[0mList of available compilers:
+  --compiler=arm       Arm C Compiler
+  --compiler=bcpp      Borland C++ Compiler
+  --compiler=cygwin    Cygwin port of GNU C Compiler for Win32
+  --compiler=intel     Intel C Compiler for 32-bit applications
+  --compiler=intele    Intel C Itanium Compiler for Itanium-based applications
+  --compiler=intelem   Intel C Compiler for 64-bit applications
+  --compiler=intelemw  Intel C Compiler for 64-bit applications on Windows
+  --compiler=intelw    Intel C Compiler for 32-bit applications on Windows
+  --compiler=mingw32   Mingw32 port of GNU C Compiler for Win32
+  --compiler=msvc      Microsoft Visual C++
+  --compiler=pathcc    PathScale Compiler for SiCortex-based applications
+  --compiler=unix      standard UNIX-style compiler
+Removing intermediate container 125c5fb08061
+ ---> cca70c442b99
+Step 16/17 : RUN python setup.py install
+ ---> Running in fac0e1077d45
+[91m/workspace/stardist_tools_/setup.py:4: DeprecationWarning: 
+
+  `numpy.distutils` is deprecated since NumPy 1.23.0, as a result
+  of the deprecation of `distutils` itself. It will be removed for
+  Python >= 3.12. For older Python versions it will remain present.
+  It is recommended to use `setuptools < 60.0` for those Python versions.
+  For more details, see:
+    https://numpy.org/devdocs/reference/distutils_status_migration.html 
+
+
+  from numpy.distutils.misc_util import get_numpy_include_dirs
+[0mrunning install
+[91m/opt/conda/lib/python3.9/site-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+[0m[91m/opt/conda/lib/python3.9/site-packages/setuptools/command/easy_install.py:144: EasyInstallDeprecationWarning: easy_install command is deprecated. Use build and pip and other standards-based tools.
+  warnings.warn(
+[0mrunning bdist_egg
+running egg_info
+creating stardist_tools.egg-info
+writing stardist_tools.egg-info/PKG-INFO
+writing dependency_links to stardist_tools.egg-info/dependency_links.txt
+writing requirements to stardist_tools.egg-info/requires.txt
+writing top-level names to stardist_tools.egg-info/top_level.txt
+writing manifest file 'stardist_tools.egg-info/SOURCES.txt'
+reading manifest file 'stardist_tools.egg-info/SOURCES.txt'
+adding license file 'LICENSE.txt'
+writing manifest file 'stardist_tools.egg-info/SOURCES.txt'
+installing library code to build/bdist.linux-x86_64/egg
+running install_lib
+running build_py
+creating build
+creating build/lib.linux-x86_64-3.9
+creating build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/matching.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/csbdeep_utils.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/sample_patches.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/rays3d.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/nms.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/version.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/utils.py -> build/lib.linux-x86_64-3.9/stardist_tools
+copying stardist_tools/__init__.py -> build/lib.linux-x86_64-3.9/stardist_tools
+creating build/lib.linux-x86_64-3.9/stardist_tools/plot
+copying stardist_tools/plot/plot.py -> build/lib.linux-x86_64-3.9/stardist_tools/plot
+copying stardist_tools/plot/__init__.py -> build/lib.linux-x86_64-3.9/stardist_tools/plot
+copying stardist_tools/plot/render.py -> build/lib.linux-x86_64-3.9/stardist_tools/plot
+creating build/lib.linux-x86_64-3.9/stardist_tools/data
+copying stardist_tools/data/__init__.py -> build/lib.linux-x86_64-3.9/stardist_tools/data
+creating build/lib.linux-x86_64-3.9/stardist_tools/geometry
+copying stardist_tools/geometry/geom2d.py -> build/lib.linux-x86_64-3.9/stardist_tools/geometry
+copying stardist_tools/geometry/geom3d.py -> build/lib.linux-x86_64-3.9/stardist_tools/geometry
+copying stardist_tools/geometry/__init__.py -> build/lib.linux-x86_64-3.9/stardist_tools/geometry
+creating build/lib.linux-x86_64-3.9/stardist_tools/kernels
+copying stardist_tools/kernels/stardist3d.cl -> build/lib.linux-x86_64-3.9/stardist_tools/kernels
+copying stardist_tools/kernels/stardist2d.cl -> build/lib.linux-x86_64-3.9/stardist_tools/kernels
+creating build/lib.linux-x86_64-3.9/stardist_tools/data/images
+copying stardist_tools/data/images/histo.jpg -> build/lib.linux-x86_64-3.9/stardist_tools/data/images
+copying stardist_tools/data/images/mask3d.tif -> build/lib.linux-x86_64-3.9/stardist_tools/data/images
+copying stardist_tools/data/images/img3d.tif -> build/lib.linux-x86_64-3.9/stardist_tools/data/images
+copying stardist_tools/data/images/mask2d.tif -> build/lib.linux-x86_64-3.9/stardist_tools/data/images
+copying stardist_tools/data/images/img2d.tif -> build/lib.linux-x86_64-3.9/stardist_tools/data/images
+running build_ext
+building 'stardist_tools.lib.stardist2d' extension
+Warning: Can't read registry to find the necessary compiler setting
+Make sure that Python modules winreg, win32api or win32con are installed.
+INFO: C compiler: gcc -pthread -B /opt/conda/compiler_compat -Wno-unused-result -Wsign-compare -DNDEBUG -O2 -Wall -fPIC -O2 -isystem /opt/conda/include -I/opt/conda/include -fPIC -O2 -isystem /opt/conda/include -fPIC
+
+creating build/temp.linux-x86_64-3.9
+creating build/temp.linux-x86_64-3.9/stardist_tools
+creating build/temp.linux-x86_64-3.9/stardist_tools/lib
+INFO: compile options: '-I/opt/conda/lib/python3.9/site-packages/numpy/core/include -I/workspace/stardist_tools_/stardist_tools/lib/external/clipper -I/workspace/stardist_tools_/stardist_tools/lib/external/nanoflann -I/opt/conda/include/python3.9 -c'
+extra options: '-std=c++11 -fopenmp'
+INFO: gcc: stardist_tools/lib/utils.cpp
+INFO: gcc: stardist_tools/lib/stardist2d.cpp
+[91mcc1plus: fatal error: stardist_tools/lib/utils.cpp: No such file or directory
+compilation terminated.
+[0m[91mcc1plus: fatal error: stardist_tools/lib/stardist2d.cpp: No such file or directory
+compilation terminated.
+[0m>>> compiling with '-fopenmp' failed
+building 'stardist_tools.lib.stardist2d' extension
+INFO: C compiler: gcc -pthread -B /opt/conda/compiler_compat -Wno-unused-result -Wsign-compare -DNDEBUG -O2 -Wall -fPIC -O2 -isystem /opt/conda/include -I/opt/conda/include -fPIC -O2 -isystem /opt/conda/include -fPIC
+
+INFO: compile options: '-I/opt/conda/lib/python3.9/site-packages/numpy/core/include -I/workspace/stardist_tools_/stardist_tools/lib/external/clipper -I/workspace/stardist_tools_/stardist_tools/lib/external/nanoflann -I/opt/conda/include/python3.9 -c'
+extra options: '-std=c++11 -Xpreprocessor -fopenmp'
+INFO: gcc: stardist_tools/lib/stardist2d.cpp
+INFO: gcc: stardist_tools/lib/utils.cpp
+[91mcc1plus: fatal error: stardist_tools/lib/stardist2d.cpp: No such file or directory
+compilation terminated.
+[0m[91mcc1plus: fatal error: stardist_tools/lib/utils.cpp: No such file or directory
+compilation terminated.
+[0m>>> compiling with '-Xpreprocessor -fopenmp' failed
+>>> compiling with OpenMP support failed, re-trying without
+building 'stardist_tools.lib.stardist2d' extension
+INFO: C compiler: gcc -pthread -B /opt/conda/compiler_compat -Wno-unused-result -Wsign-compare -DNDEBUG -O2 -Wall -fPIC -O2 -isystem /opt/conda/include -I/opt/conda/include -fPIC -O2 -isystem /opt/conda/include -fPIC
+
+INFO: compile options: '-I/opt/conda/lib/python3.9/site-packages/numpy/core/include -I/workspace/stardist_tools_/stardist_tools/lib/external/clipper -I/workspace/stardist_tools_/stardist_tools/lib/external/nanoflann -I/opt/conda/include/python3.9 -c'
+extra options: '-std=c++11'
+INFO: gcc: stardist_tools/lib/stardist2d.cpp
+INFO: gcc: stardist_tools/lib/utils.cpp
+[91mcc1plus: fatal error: stardist_tools/lib/utils.cpp: No such file or directory
+compilation terminated.
+[0m[91mcc1plus: fatal error: stardist_tools/lib/stardist2d.cpp: No such file or directory
+compilation terminated.
+[0m[91merror: Command "gcc -pthread -B /opt/conda/compiler_compat -Wno-unused-result -Wsign-compare -DNDEBUG -O2 -Wall -fPIC -O2 -isystem /opt/conda/include -I/opt/conda/include -fPIC -O2 -isystem /opt/conda/include -fPIC -I/opt/conda/lib/python3.9/site-packages/numpy/core/include -I/workspace/stardist_tools_/stardist_tools/lib/external/clipper -I/workspace/stardist_tools_/stardist_tools/lib/external/nanoflann -I/opt/conda/include/python3.9 -c stardist_tools/lib/stardist2d.cpp -o build/temp.linux-x86_64-3.9/stardist_tools/lib/stardist2d.o -std=c++11" failed with exit status 1
+[0m
